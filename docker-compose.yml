@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: chatapp-postgres
+    environment:
+      POSTGRES_DB: chatapp
+      POSTGRES_USER: chatuser
+      POSTGRES_PASSWORD: chatpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chatapp-network
+
+  valkey:
+    image: valkey/valkey:7
+    container_name: chatapp-valkey
+    ports:
+      - "6379:6379"
+    networks:
+      - chatapp-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chatapp-backend
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=chatapp
+      - DB_USER=chatuser
+      - DB_PASSWORD=chatpass
+      - REDIS_HOST=valkey
+      - REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - valkey
+    networks:
+      - chatapp-network
+    volumes:
+      - ./backend:/app
+    command: ./gradlew bootRun
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chatapp-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080
+      - NEXT_PUBLIC_WS_URL=http://backend:8080
+      - NEXT_PUBLIC_GRPC_URL=http://backend:9090
+    depends_on:
+      - backend
+    networks:
+      - chatapp-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  chatapp-network:
+    driver: bridge
