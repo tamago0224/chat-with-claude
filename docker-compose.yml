@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15
@@ -14,6 +12,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - chatapp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatuser -d chatapp"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   valkey:
     image: valkey/valkey:7
@@ -22,6 +25,11 @@ services:
       - "6379:6379"
     networks:
       - chatapp-network
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   backend:
     build:
@@ -32,16 +40,18 @@ services:
       - "8080:8080"
       - "9090:9090"
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=chatapp
-      - DB_USER=chatuser
-      - DB_PASSWORD=chatpass
-      - REDIS_HOST=valkey
-      - REDIS_PORT=6379
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: chatapp
+      DB_USER: chatuser
+      DB_PASSWORD: chatpass
+      REDIS_HOST: valkey
+      REDIS_PORT: 6379
     depends_on:
-      - postgres
-      - valkey
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
     networks:
       - chatapp-network
     volumes:
@@ -56,9 +66,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8080
-      - NEXT_PUBLIC_WS_URL=http://backend:8080
-      - NEXT_PUBLIC_GRPC_URL=http://backend:9090
+      NEXT_PUBLIC_API_URL: http://backend:8080
+      NEXT_PUBLIC_WS_URL: http://backend:8080
+      NEXT_PUBLIC_GRPC_URL: http://backend:9090
     depends_on:
       - backend
     networks:
