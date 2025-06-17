@@ -2,6 +2,11 @@ package com.chatapp.controller;
 
 import com.chatapp.security.JwtUtil;
 import com.chatapp.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+@Tag(name = "Authentication", description = "認証関連のAPI")
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
@@ -20,6 +26,12 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @Operation(summary = "現在のユーザー情報を取得", description = "JWTトークンから現在のユーザー情報を取得します")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "ユーザー情報取得成功"),
+        @ApiResponse(responseCode = "401", description = "認証エラー")
+    })
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String token) {
         try {
