@@ -25,8 +25,8 @@ public class User {
     @Column(name = "picture", length = 500)
     private String picture;
     
-    @Column(name = "google_id", unique = true)
-    private String googleId;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
     
     @CreationTimestamp
     @Column(name = "created_at")
@@ -51,12 +51,12 @@ public class User {
     // Constructors
     public User() {}
 
-    public User(String id, String email, String name, String picture, String googleId) {
+    public User(String id, String email, String name, String picture, String passwordHash) {
         this.id = id;
         this.email = email;
         this.name = name;
         this.picture = picture;
-        this.googleId = googleId;
+        this.passwordHash = passwordHash;
     }
 
     // Getters and Setters
@@ -92,12 +92,12 @@ public class User {
         this.picture = picture;
     }
 
-    public String getGoogleId() {
-        return googleId;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setGoogleId(String googleId) {
-        this.googleId = googleId;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public LocalDateTime getCreatedAt() {

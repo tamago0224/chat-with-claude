@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     picture VARCHAR(500),
-    google_id VARCHAR(255) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -55,7 +55,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_room_members_user ON room_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_rooms_owner ON chat_rooms(owner_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -78,8 +78,9 @@ CREATE TRIGGER update_chat_rooms_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert sample data for development
-INSERT INTO users (id, email, name, picture, google_id) VALUES 
-    ('user-1', 'test@example.com', 'テストユーザー', NULL, 'google-123')
+-- Password: 'password123' (hashed with bcrypt)
+INSERT INTO users (id, email, name, password_hash, picture) VALUES 
+    ('user-1', 'test@example.com', 'テストユーザー', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeweBuoL5LN/7x.QK', NULL)
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO chat_rooms (id, name, description, owner_id, is_private) VALUES 

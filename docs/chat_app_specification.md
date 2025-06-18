@@ -17,11 +17,11 @@
 ## 1. 概要
 
 ### 1.1 プロジェクト概要
-リアルタイムチャット機能を持つWebアプリケーション。テキスト、絵文字、画像の送受信に対応し、Google OAuth認証とルームベースの会話をサポートする。
+リアルタイムチャット機能を持つWebアプリケーション。テキスト、絵文字、画像の送受信に対応し、メール・パスワード認証とルームベースの会話をサポートする。
 
 ### 1.2 主要機能
 - WebSocketによるリアルタイムメッセージング
-- Google OAuth認証
+- メール・パスワード認証
 - チャットルームの作成・管理
 - メッセージ履歴とページネーション
 - 画像共有機能
@@ -33,7 +33,7 @@
 - **バックエンド**: Spring Boot 3.x + Java 17
 - **データベース**: PostgreSQL 15+ + Valkey (Redis) キャッシュ
 - **通信**: WebSocket (Socket.io) + gRPC + REST API
-- **認証**: Google OpenID Connect
+- **認証**: JWT + メール・パスワード
 - **デプロイ**: Docker & Docker Compose
 
 ---
@@ -48,8 +48,9 @@
 - **メッセージ履歴**: 永続化保存と無限スクロール読み込み
 
 ### 2.2 ユーザー認証・管理
-- **Google OAuth**: Googleアカウントによるシングルサインオン
+- **メール・パスワード認証**: セキュアなアカウント作成とログイン
 - **JWTトークン**: セキュアなセッション管理
+- **アカウント管理**: 新規登録、ログイン、パスワードリセット
 - **ユーザープロフィール**: 表示名とプロフィール画像のカスタマイズ
 - **プライバシー設定**: オンライン状態の表示制御
 
@@ -77,7 +78,7 @@
 │ • TypeScript    │    │ • Java 17       │    │ • Users         │
 │ • TailwindCSS   │    │ • Spring Boot   │    │ • Chat Rooms    │
 │ • Socket.io     │    │ • Socket.io     │    │ • Messages      │
-│ • NextAuth.js   │    │ • gRPC          │    │ • Room Members  │
+│ • JWT認証       │    │ • gRPC          │    │ • Room Members  │
 └─────────────────┘    │ • Spring Data   │    └─────────────────┘
                        │ • Spring Security│    ┌─────────────────┐
                        └─────────────────┘    │     Valkey      │
@@ -103,12 +104,12 @@ src/
 ├── components/
 │   ├── chat/           // チャット関連コンポーネント
 │   ├── rooms/          // ルーム管理コンポーネント
-│   ├── auth/           // 認証関連コンポーネント
+│   ├── auth/           // 認証関連コンポーネント (サインイン・サインアップ)
 │   └── common/         // 共通コンポーネント
 ├── pages/              // Next.jsページ
 ├── hooks/              // カスタムフック
 ├── lib/
-│   ├── auth.ts         // 認証設定
+│   ├── auth.ts         // JWT認証設定
 │   ├── websocket.ts    // WebSocket管理
 │   └── grpc-client.ts  // gRPCクライアント
 ├── types/              // TypeScript型定義
@@ -141,7 +142,7 @@ Users                    ChatRooms
 │ email (UNIQUE)  │     │ name            │
 │ name            │     │ description     │
 │ picture         │     │ owner_id (FK)   │
-│ google_id       │     │ is_private      │
+│ password_hash   │     │ is_private      │
 │ created_at      │     │ created_at      │
 │ updated_at      │     │ updated_at      │
 └─────────────────┘     └─────────────────┘
@@ -180,8 +181,8 @@ CREATE TABLE users (
     id VARCHAR(36) PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     picture VARCHAR(500),
-    google_id VARCHAR(255) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -236,7 +237,7 @@ CREATE INDEX idx_messages_user ON messages(user_id);
 CREATE INDEX idx_room_members_user ON room_members(user_id);
 CREATE INDEX idx_chat_rooms_owner ON chat_rooms(owner_id);
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_google_id ON users(google_id);
+CREATE INDEX idx_users_created_at ON users(created_at);
 ```
 
 ---
@@ -327,8 +328,12 @@ interface ServerToClientEvents {
 ### 5.3 REST APIエンドポイント
 
 #### 認証
-- `GET /oauth2/authorization/google` - Google OAuth開始
-- `GET /auth/callback` - OAuthコールバック処理
+- `POST /api/auth/register` - 新規ユーザー登録
+- `POST /api/auth/login` - ユーザーログイン
+- `POST /api/auth/logout` - ログアウト
+- `POST /api/auth/refresh` - JWTトークン更新
+- `POST /api/auth/forgot-password` - パスワードリセット要求
+- `POST /api/auth/reset-password` - パスワードリセット実行
 
 #### ファイルアップロード
 - `POST /api/upload/image` - 画像ファイルアップロード
@@ -560,24 +565,39 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hirag
 ## 7. セキュリティ・認証
 
 ### 7.1 認証フロー
+
+#### 新規登録フロー
 ```
-1. ユーザーが「Googleでログイン」をクリック
+1. ユーザーが「アカウント作成」をクリック
    ↓
-2. Google OAuth同意画面にリダイレクト
+2. 登録フォームでメール・パスワード・名前を入力
    ↓
-3. ユーザーが権限を許可
+3. バックエンドでメール重複チェック
    ↓
-4. Googleが認証コードと共に /auth/callback にリダイレクト
+4. パスワードハッシュ化してデータベースに保存
    ↓
-5. バックエンドがコードをユーザー情報と交換
+5. JWTトークンを生成
    ↓
-6. データベースでユーザーを作成・更新
+6. トークンをフロントエンドに返却
    ↓
-7. JWTトークンを生成
+7. フロントエンドがトークンを保存してWebSocket接続を確立
+```
+
+#### ログインフロー
+```
+1. ユーザーが「ログイン」をクリック
    ↓
-8. トークンと共にフロントエンドにリダイレクト
+2. ログインフォームでメール・パスワードを入力
    ↓
-9. フロントエンドがトークンを保存してWebSocket接続を確立
+3. バックエンドでメールの存在確認
+   ↓
+4. パスワードハッシュの照合
+   ↓
+5. JWTトークンを生成
+   ↓
+6. トークンをフロントエンドに返却
+   ↓
+7. フロントエンドがトークンを保存してWebSocket接続を確立
 ```
 
 ### 7.2 JWTトークン構造
@@ -722,7 +742,7 @@ cd chat-application
 
 # 2. 環境設定
 cp .env.example .env
-# Google OAuth認証情報で.envを編集
+# JWT認証設定で.envを編集
 
 # 3. 開発環境開始
 docker-compose up -d postgres valkey
@@ -740,8 +760,10 @@ npm run dev
 #### 環境変数
 ```bash
 # バックエンド (.env)
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+JWT_SECRET=your_jwt_secret_key_256_bits
+JWT_EXPIRATION=86400
+JWT_REFRESH_EXPIRATION=604800
+PASSWORD_SALT_ROUNDS=12
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=chatapp
@@ -749,17 +771,11 @@ DB_USER=chatuser
 DB_PASSWORD=chatpass
 REDIS_HOST=localhost
 REDIS_PORT=6379
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRATION=86400
 
 # フロントエンド (.env.local)
 NEXT_PUBLIC_API_URL=http://localhost:8080
 NEXT_PUBLIC_WS_URL=http://localhost:8080
 NEXT_PUBLIC_GRPC_URL=http://localhost:9090
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_nextauth_secret
 ```
 
 ### 9.2 ビルド・デプロイ

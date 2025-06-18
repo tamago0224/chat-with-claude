@@ -30,7 +30,7 @@ export default function Home() {
     {
       icon: <Shield className="h-6 w-6" />,
       title: 'セキュア認証',
-      description: 'Google OAuth2による安全なログイン'
+      description: 'JWT認証による安全なログイン'
     },
     {
       icon: <Smartphone className="h-6 w-6" />,
@@ -153,7 +153,7 @@ export default function Home() {
                   <li>• Next.js 14 + TypeScript</li>
                   <li>• TailwindCSS</li>
                   <li>• Socket.io クライアント</li>
-                  <li>• NextAuth.js</li>
+                  <li>• JWT認証</li>
                 </ul>
               </div>
 
@@ -163,7 +163,7 @@ export default function Home() {
                   <li>• Spring Boot 3.x + Java 17</li>
                   <li>• PostgreSQL + Valkey (Redis)</li>
                   <li>• Socket.io + gRPC</li>
-                  <li>• Google OAuth2</li>
+                  <li>• JWT認証</li>
                 </ul>
               </div>
             </div>
@@ -177,7 +177,7 @@ export default function Home() {
               今すぐチャットを始めよう
             </h2>
             <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-              Googleアカウントで簡単ログイン。すぐにリアルタイムチャットを体験できます。
+              メールアドレスで簡単ログイン。すぐにリアルタイムチャットを体験できます。
             </p>
             <Link
               href="/auth/signin"

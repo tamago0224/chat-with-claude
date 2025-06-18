@@ -32,8 +32,8 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    public Optional<User> findByGoogleId(String googleId) {
-        return userRepository.findByGoogleId(googleId);
+    public User save(User user) {
+        return userRepository.save(user);
     }
 
     public List<User> findByRoomId(String roomId) {
@@ -52,9 +52,6 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
-    public boolean existsByGoogleId(String googleId) {
-        return userRepository.existsByGoogleId(googleId);
-    }
 
     public void deleteUser(String id) {
         userRepository.deleteById(id);

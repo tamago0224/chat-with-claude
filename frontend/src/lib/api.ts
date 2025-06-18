@@ -41,15 +41,26 @@ apiClient.interceptors.response.use(
 
 // 認証関連API
 export const authAPI = {
+  // 新規ユーザー登録
+  register: (data: { email: string; password: string; name: string }) =>
+    apiClient.post('/api/auth/register', data),
+  
+  // ユーザーログイン
+  login: (data: { email: string; password: string }) =>
+    apiClient.post('/api/auth/login', data),
+  
   // 現在のユーザー情報を取得
-  getCurrentUser: () => apiClient.get('/auth/me'),
+  getCurrentUser: () => apiClient.get('/api/auth/me'),
   
   // トークンの有効性を確認
   validateToken: (token: string) => 
-    apiClient.post('/auth/validate', { token }),
+    apiClient.post('/api/auth/validate', { token }),
+  
+  // JWTトークン更新
+  refreshToken: () => apiClient.post('/api/auth/refresh'),
   
   // ログアウト
-  logout: () => apiClient.post('/auth/logout'),
+  logout: () => apiClient.post('/api/auth/logout'),
 }
 
 // ユーザー関連API

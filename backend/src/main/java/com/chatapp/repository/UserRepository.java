@@ -14,8 +14,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     
     Optional<User> findByEmail(String email);
     
-    Optional<User> findByGoogleId(String googleId);
-    
     @Query("SELECT u FROM User u JOIN u.roomMemberships rm WHERE rm.room.id = :roomId")
     List<User> findByRoomId(@Param("roomId") String roomId);
     
@@ -23,6 +21,4 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<User> findByNameOrEmailContainingIgnoreCase(@Param("searchTerm") String searchTerm);
     
     boolean existsByEmail(String email);
-    
-    boolean existsByGoogleId(String googleId);
 }
