@@ -74,7 +74,7 @@ const MessageList: React.FC<MessageListProps> = ({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
+        className="flex-1 overflow-y-auto px-2 sm:px-4 py-4 space-y-4"
       >
         {/* 読み込み中インジケータ（上部） */}
         {loading && (

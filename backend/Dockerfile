@@ -1,20 +1,21 @@
 FROM openjdk:17-jdk-alpine AS builder
 
+# Install Maven
+RUN apk add --no-cache maven
+
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml
-COPY mvnw .
-COPY .mvn .mvn
+# Copy pom.xml
 COPY pom.xml .
 
 # Download dependencies
-RUN ./mvnw dependency:go-offline
+RUN mvn dependency:go-offline
 
 # Copy source code
 COPY src ./src
 
 # Build application
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Runtime stage
 FROM openjdk:17-jdk-alpine

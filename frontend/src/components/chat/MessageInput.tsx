@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Image, Smile } from 'lucide-react'
+import { Send, Image, Smile, Loader2 } from 'lucide-react'
 import { SendMessageData } from '@/types'
+import { fileAPI } from '@/lib/api'
+import EmojiPicker from './EmojiPicker'
+import { useToast } from '@/components/common/ToastContainer'
 
 interface MessageInputProps {
   onSendMessage: (data: SendMessageData) => void
@@ -17,9 +20,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout>()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { showError, showSuccess } = useToast()
 
   // テキストエリアの高さを自動調整
   useEffect(() => {
@@ -83,41 +89,80 @@ const MessageInput: React.FC<MessageInputProps> = ({
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     // ファイルサイズチェック（10MB）
     if (file.size > 10 * 1024 * 1024) {
-      alert('ファイルサイズは10MB以下にしてください')
+      showError('ファイルサイズエラー', 'ファイルサイズは10MB以下にしてください')
       return
     }
 
     // ファイルタイプチェック
     if (!file.type.startsWith('image/')) {
-      alert('画像ファイルのみアップロード可能です')
+      showError('ファイル形式エラー', '画像ファイルのみアップロード可能です')
       return
     }
 
-    // 画像アップロード処理（実装が必要）
-    // uploadImage(file)
-    console.log('Image upload:', file)
-    
-    // 入力をクリア
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+    try {
+      setIsUploading(true)
+      
+      // 画像アップロード
+      const response = await fileAPI.uploadImage(file)
+      const { url } = response.data
+
+      // 画像メッセージを送信
+      onSendMessage({
+        content: file.name,
+        type: 'IMAGE',
+        imageUrl: url
+      })
+
+      showSuccess('画像アップロード完了', '画像が正常にアップロードされました')
+
+    } catch (error) {
+      console.error('画像アップロードエラー:', error)
+      showError('アップロードエラー', '画像のアップロードに失敗しました')
+    } finally {
+      setIsUploading(false)
+      
+      // 入力をクリア
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
   const openEmojiPicker = () => {
-    // 絵文字ピッカーを開く（実装が必要）
-    console.log('Open emoji picker')
+    setIsEmojiPickerOpen(!isEmojiPickerOpen)
   }
 
-  const canSend = message.trim().length > 0 && !disabled
+  const handleEmojiSelect = (emoji: string) => {
+    // カーソル位置に絵文字を挿入
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart
+      const end = textareaRef.current.selectionEnd
+      const newMessage = message.slice(0, start) + emoji + message.slice(end)
+      setMessage(newMessage)
+      
+      // カーソル位置を絵文字の後に移動
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = start + emoji.length
+          textareaRef.current.selectionEnd = start + emoji.length
+          textareaRef.current.focus()
+        }
+      }, 0)
+    } else {
+      setMessage(message + emoji)
+    }
+  }
+
+  const canSend = message.trim().length > 0 && !disabled && !isUploading
 
   return (
-    <div className="border-t border-gray-200 bg-white px-4 py-3">
+    <div className="border-t border-gray-200 bg-white px-4 py-3 relative">
       <form onSubmit={handleSubmit} className="flex items-end space-x-2">
         {/* ファイル入力（非表示） */}
         <input
@@ -133,18 +178,26 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={disabled}
+            disabled={disabled || isUploading}
             className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
             title="画像を添付"
           >
-            <Image size={20} />
+            {isUploading ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <Image size={20} />
+            )}
           </button>
           
           <button
             type="button"
             onClick={openEmojiPicker}
             disabled={disabled}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+              isEmojiPickerOpen 
+                ? 'text-primary-600 bg-primary-100' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+            }`}
             title="絵文字"
           >
             <Smile size={20} />
@@ -183,6 +236,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <Send size={20} />
         </button>
       </form>
+
+      {/* 絵文字ピッカー */}
+      <EmojiPicker
+        isOpen={isEmojiPickerOpen}
+        onEmojiSelect={handleEmojiSelect}
+        onClose={() => setIsEmojiPickerOpen(false)}
+      />
     </div>
   )
 }

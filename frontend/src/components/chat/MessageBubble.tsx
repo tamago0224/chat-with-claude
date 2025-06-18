@@ -4,6 +4,8 @@ import { ja } from 'date-fns/locale'
 import { User } from 'lucide-react'
 import { Message } from '@/types'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+
 interface MessageBubbleProps {
   message: Message
   isOwn: boolean
@@ -34,13 +36,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const renderMessageContent = () => {
     switch (message.messageType) {
       case 'IMAGE':
+        const imageUrl = message.imageUrl?.startsWith('http') 
+          ? message.imageUrl 
+          : `${API_BASE_URL}${message.imageUrl}`
+        
         return (
-          <div className="max-w-sm">
+          <div className="max-w-xs sm:max-w-sm">
             <img
-              src={message.imageUrl}
+              src={imageUrl}
               alt="共有画像"
               className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => window.open(message.imageUrl, '_blank')}
+              onClick={() => window.open(imageUrl, '_blank')}
+              onError={(e) => {
+                console.error('画像の読み込みに失敗しました:', imageUrl)
+                e.currentTarget.src = '/placeholder-image.png'
+              }}
             />
             {message.content && (
               <p className="mt-2 text-sm">{message.content}</p>
@@ -78,7 +88,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       )}
 
       {/* メッセージコンテンツ */}
-      <div className={`flex flex-col max-w-xs lg:max-w-md ${isOwn ? 'items-end' : 'items-start'}`}>
+      <div className={`flex flex-col max-w-xs sm:max-w-sm lg:max-w-md ${isOwn ? 'items-end' : 'items-start'}`}>
         {/* ユーザー名（自分以外） */}
         {!isOwn && showAvatar && (
           <span className="text-xs text-gray-500 mb-1 px-3">
