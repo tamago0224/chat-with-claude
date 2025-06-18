@@ -151,6 +151,18 @@ npm run dev
 - データベース設計、API仕様、UI仕様も仕様書に詳細に記載されています
 - 開発フェーズと優先順位についても仕様書を参照してください
 
+### コード品質管理
+
+バックエンドでは以下のツールを使用してコード品質を維持しています：
+
+- **Google Java Format**: 統一されたコードフォーマット
+- **Checkstyle**: コーディング規約チェック（カスタム設定）
+- **SpotBugs**: バグパターンと潜在的な問題の検出
+- **PMD**: コード品質分析とベストプラクティスチェック
+- **EditorConfig**: エディタ設定の統一
+
+開発時は定期的に `mvn validate` を実行してコード品質を確認してください。
+
 ## 利用可能なコマンド
 
 ### バックエンド
@@ -160,6 +172,13 @@ mvn clean compile        # コンパイル
 mvn test                # テスト実行
 mvn spring-boot:run     # 開発サーバー起動
 mvn clean package       # JAR作成
+
+# コード品質・フォーマット
+mvn fmt:format          # Google Java Formatでコード整形
+mvn checkstyle:check    # Checkstyleでコーディング規約チェック
+mvn spotbugs:check      # SpotBugsでバグパターン検出
+mvn pmd:check           # PMDでコード品質分析
+mvn validate            # 全てのコード品質チェック実行
 ```
 
 ### フロントエンド
