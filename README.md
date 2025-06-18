@@ -1,6 +1,6 @@
 # チャットアプリケーション
 
-リアルタイムチャット機能を持つWebアプリケーションです。WebSocketによるリアルタイムメッセージング、Google OAuth認証、チャットルームの作成・管理などの機能を提供します。
+リアルタイムチャット機能を持つWebアプリケーションです。WebSocketによるリアルタイムメッセージング、メール・パスワード認証、チャットルームの作成・管理、画像共有などの機能を提供します。
 
 ## 技術スタック
 
@@ -8,7 +8,7 @@
 - **バックエンド**: Spring Boot 3.x + Java 17
 - **データベース**: PostgreSQL 15+ + Valkey (Redis) キャッシュ
 - **通信**: WebSocket (Socket.io) + gRPC + REST API
-- **認証**: Google OpenID Connect
+- **認証**: JWT + メール・パスワード認証
 - **デプロイ**: Docker & Docker Compose
 
 ## プロジェクト構造
@@ -67,22 +67,23 @@ cd chat-with-claude
 
 ### 2. 環境変数の設定
 
-```bash
-cp .env.example .env
-```
-
-`.env`ファイルを編集して、Google OAuth認証情報とその他の設定を行ってください：
+環境変数を設定します（.envファイルは用意されていますが、必要に応じて調整してください）：
 
 ```env
-# Google OAuth設定（必須）
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# JWT設定（必須）
+# JWT認証設定
 JWT_SECRET=your_jwt_secret_key_minimum_32_characters
-NEXTAUTH_SECRET=your_nextauth_secret_key
+JWT_EXPIRATION=86400
 
-# その他の設定は開発環境ではデフォルト値を使用可能
+# データベース設定（開発環境ではデフォルト値を使用可能）
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=chatapp
+DB_USER=chatuser
+DB_PASSWORD=chatpass
+
+# Redis/Valkey設定
+REDIS_HOST=localhost
+REDIS_PORT=6379
 ```
 
 ### 3. Docker Composeで開発環境を起動
@@ -121,20 +122,26 @@ npm run dev
 
 ## 開発ステータス
 
-現在、**フェーズ1（コアインフラ）**の実装が完了しています。
+現在、**フェーズ3（フロントエンド実装）**まで完了しています。
 
 ### 完了した項目
 - ✅ プロジェクトセットアップと設定
 - ✅ データベーススキーマ作成
 - ✅ Docker環境構築
-- ✅ 基本的な開発環境セットアップ
+- ✅ JWT認証実装（メール・パスワード）
+- ✅ 基本gRPCサービス実装
+- ✅ WebSocketによるリアルタイム通信
+- ✅ フロントエンドUI実装
+- ✅ チャットルーム機能
+- ✅ 画像共有機能
+- ✅ レスポンシブデザイン
 
-### 次のステップ（フェーズ2）
-- [ ] Google OAuth統合
-- [ ] JWT認証実装
-- [ ] 基本gRPCサービス実装
-- [ ] WebSocketによるリアルタイム通信
-- [ ] 基本的なチャット機能
+### 主要機能
+- **認証**: メール・パスワード認証（サインイン・サインアップ）
+- **リアルタイムチャット**: WebSocketによる即座のメッセージ配信
+- **ルーム管理**: チャットルームの作成・参加・管理
+- **画像共有**: 画像のアップロードと表示
+- **レスポンシブUI**: モバイル・デスクトップ対応
 
 ## 開発ガイドライン
 
@@ -176,12 +183,10 @@ docker-compose logs -f backend    # バックエンドログ確認
 
 ## トラブルシューティング
 
-### Google OAuth設定
+### JWT認証関連
 
-1. [Google Cloud Console](https://console.cloud.google.com/)でプロジェクトを作成
-2. OAuth 2.0 クライアントIDを作成
-3. 認証済みリダイレクトURIに `http://localhost:3000/api/auth/callback/google` を追加
-4. クライアントIDとシークレットを `.env` ファイルに設定
+- JWTトークンの有効期限切れ: 自動的に再ログインが必要です
+- 認証に失敗する場合: メールアドレスとパスワードを確認してください
 
 ### データベース関連
 
