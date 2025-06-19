@@ -200,6 +200,35 @@ docker-compose down               # サービス停止
 docker-compose logs -f backend    # バックエンドログ確認
 ```
 
+## CI/CD
+
+GitHub Actionsを使用した継続的インテグレーションを設定済みです。
+
+### 自動チェック項目
+
+**バックエンド**:
+- Java コンパイル
+- Google Java Format チェック（フォーマット未適用時はCI失敗）
+- Checkstyle によるコーディング規約チェック
+- SpotBugs によるバグパターン検出
+- PMD によるコード品質分析
+- 単体テスト実行
+
+**フロントエンド**:
+- ESLint によるコードチェック
+- TypeScript 型チェック
+- Next.js ビルドテスト
+
+**共通**:
+- Docker イメージビルドテスト
+
+### ワークフロー
+
+- `main` および `develop` ブランチへのプッシュ時
+- Pull Request 作成時
+
+コード品質レポートは GitHub Actions の Artifacts としてダウンロード可能です。
+
 ## トラブルシューティング
 
 ### JWT認証関連
