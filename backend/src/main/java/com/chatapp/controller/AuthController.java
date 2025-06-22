@@ -3,11 +3,6 @@ package com.chatapp.controller;
 import com.chatapp.entity.User;
 import com.chatapp.security.JwtUtil;
 import com.chatapp.service.UserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Tag(name = "Authentication", description = "認証関連のAPI")
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
@@ -74,12 +68,6 @@ public class AuthController {
         public void setPassword(String password) { this.password = password; }
     }
 
-    @Operation(summary = "新規ユーザー登録", description = "メール・パスワード・名前で新規ユーザーを登録します")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "登録成功"),
-        @ApiResponse(responseCode = "400", description = "入力エラー"),
-        @ApiResponse(responseCode = "409", description = "メールアドレスが既に使用されています")
-    })
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
         try {
@@ -117,12 +105,6 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "ユーザーログイン", description = "メール・パスワードでログインします")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "ログイン成功"),
-        @ApiResponse(responseCode = "400", description = "入力エラー"),
-        @ApiResponse(responseCode = "401", description = "認証エラー")
-    })
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
         try {
@@ -156,12 +138,6 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "現在のユーザー情報を取得", description = "JWTトークンから現在のユーザー情報を取得します")
-    @SecurityRequirement(name = "Bearer Authentication")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "ユーザー情報取得成功"),
-        @ApiResponse(responseCode = "401", description = "認証エラー")
-    })
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestHeader("Authorization") String token) {
         try {
