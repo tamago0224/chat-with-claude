@@ -230,11 +230,11 @@ public class SocketIOEventHandler {
                 User user = userService.findById(userId).orElse(null);
                 if (user != null) {
                     // Broadcast typing status to others in the room (excluding sender)
-                    client.getBroadcastOperations().sendEvent("user_typing", Map.of(
+                    socketIOServer.getRoomOperations(currentRoom).sendEvent("user_typing", Map.of(
                         "userId", userId,
                         "userName", user.getName(),
                         "typing", data.isTyping()
-                    ));
+                    ), client);
                 }
             }
         };
