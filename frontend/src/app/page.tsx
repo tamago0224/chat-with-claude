@@ -1,234 +1,308 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { MessageCircle, Users, Zap, Shield, Smartphone, Globe } from 'lucide-react'
+import { MessageCircle, Users, Plus, Search, Hash, Lock, UserPlus, LogOut, Settings, Menu } from 'lucide-react'
+import Layout from '@/components/layout/Layout'
+import { User, ChatRoom } from '@/types'
 
 export default function Home() {
   const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<User | undefined>()
+  const [rooms, setRooms] = useState<ChatRoom[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 既にログインしている場合はチャット画面にリダイレクト
+    // 認証状態をチェック
     const token = localStorage.getItem('authToken')
-    if (token) {
-      router.push('/chat')
+    const userData = localStorage.getItem('userData')
+    
+    if (token && userData) {
+      setIsAuthenticated(true)
+      setUser(JSON.parse(userData))
+      // TODO: 実際のAPI呼び出しでルーム一覧を取得
+      loadRooms()
+    } else {
+      setIsAuthenticated(false)
     }
-  }, [router])
+    setLoading(false)
+  }, [])
 
-  const features = [
-    {
-      icon: <Zap className="h-6 w-6" />,
-      title: 'リアルタイム通信',
-      description: 'WebSocketによる即座のメッセージ配信とタイピング表示'
-    },
-    {
-      icon: <Users className="h-6 w-6" />,
-      title: 'ルーム管理',
-      description: 'パブリック・プライベートルームの作成と管理'
-    },
-    {
-      icon: <Shield className="h-6 w-6" />,
-      title: 'セキュア認証',
-      description: 'JWT認証による安全なログイン'
-    },
-    {
-      icon: <Smartphone className="h-6 w-6" />,
-      title: 'レスポンシブ',
-      description: 'モバイル・タブレット・デスクトップ対応'
-    },
-    {
-      icon: <Globe className="h-6 w-6" />,
-      title: '画像共有',
-      description: '画像・絵文字の送受信をサポート'
-    },
-    {
-      icon: <MessageCircle className="h-6 w-6" />,
-      title: 'メッセージ履歴',
-      description: '過去のメッセージ検索と無限スクロール'
-    }
-  ]
+  const loadRooms = async () => {
+    // TODO: 実際のAPI呼び出しに置き換える
+    const mockRooms: ChatRoom[] = [
+      {
+        id: '1',
+        name: '一般チャット',
+        description: '誰でも参加できるパブリックチャット',
+        owner: { id: '1', name: 'Admin', email: 'admin@example.com', createdAt: '', updatedAt: '' },
+        isPrivate: false,
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+        memberCount: 25,
+        lastMessage: {
+          id: '1',
+          content: 'こんにちは！',
+          messageType: 'TEXT',
+          createdAt: '2024-01-01T12:00:00Z',
+          user: { id: '2', name: 'User', email: 'user@example.com', createdAt: '', updatedAt: '' },
+          room: {} as ChatRoom
+        }
+      },
+      {
+        id: '2',
+        name: '開発チーム',
+        description: 'プロジェクトの開発について話し合う',
+        owner: { id: '1', name: 'Admin', email: 'admin@example.com', createdAt: '', updatedAt: '' },
+        isPrivate: true,
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+        memberCount: 8
+      }
+    ]
+    setRooms(mockRooms)
+  }
 
+  const handleRoomSelect = (roomId: string) => {
+    router.push(`/chat?room=${roomId}`)
+  }
+
+  const handleCreateRoom = () => {
+    // TODO: ルーム作成モーダルを表示
+    console.log('Create room')
+  }
+
+  const handleJoinRoom = (roomId: string) => {
+    // TODO: ルーム参加処理
+    console.log('Join room:', roomId)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('userData')
+    setIsAuthenticated(false)
+    setUser(undefined)
+    router.push('/auth/signin')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 認証済みユーザー向けダッシュボード
+  if (isAuthenticated) {
+    return (
+      <Layout
+        user={user}
+        rooms={rooms}
+        onRoomSelect={handleRoomSelect}
+        onCreateRoom={handleCreateRoom}
+        onJoinRoom={handleJoinRoom}
+        onLogout={handleLogout}
+      >
+        <div className="flex-1 flex flex-col bg-gray-50">
+          {/* ウェルカムメッセージ */}
+          <div className="p-6 bg-white border-b border-gray-200">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              おかえりなさい、{user?.name}さん！
+            </h1>
+            <p className="text-gray-600">
+              チャットルームを選択して会話を始めましょう。
+            </p>
+          </div>
+
+          {/* メインコンテンツ */}
+          <div className="flex-1 p-6">
+            <div className="max-w-4xl mx-auto">
+              {/* 最近のアクティビティ */}
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">最近のアクティビティ</h2>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  {rooms.slice(0, 3).map((room) => (
+                    <div
+                      key={room.id}
+                      className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                          {room.isPrivate ? (
+                            <Lock size={20} className="text-primary-600" />
+                          ) : (
+                            <Hash size={20} className="text-primary-600" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">{room.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {room.lastMessage?.content || '新しいメッセージはありません'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRoomSelect(room.id)}
+                        className="px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
+                      >
+                        参加
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* クイックアクション */}
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">クイックアクション</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    onClick={handleCreateRoom}
+                    className="flex items-center space-x-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Plus size={20} className="text-green-600" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-medium text-gray-900">新しいルームを作成</h3>
+                      <p className="text-sm text-gray-500">プライベートまたはパブリックルーム</p>
+                    </div>
+                  </button>
+                  
+                  <button className="flex items-center space-x-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Search size={20} className="text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-medium text-gray-900">ルームを検索</h3>
+                      <p className="text-sm text-gray-500">パブリックルームを見つける</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* 統計情報 */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">統計情報</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="text-2xl font-bold text-primary-600 mb-1">
+                      {rooms.filter(r => r.memberCount).length}
+                    </div>
+                    <div className="text-sm text-gray-500">参加中のルーム</div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="text-2xl font-bold text-green-600 mb-1">
+                      {rooms.reduce((total, room) => total + (room.memberCount || 0), 0)}
+                    </div>
+                    <div className="text-sm text-gray-500">総メンバー数</div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="text-2xl font-bold text-blue-600 mb-1">
+                      {rooms.filter(r => r.lastMessage).length}
+                    </div>
+                    <div className="text-sm text-gray-500">アクティブなルーム</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  // 未認証ユーザー向けランディングページ（簡略版）
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* ヘッダー */}
-      <header className="relative bg-white shadow-sm">
+      <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <MessageCircle className="h-8 w-8 text-primary-500 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">チャットアプリ</h1>
+              <h1 className="text-xl font-bold text-gray-900">チャットアプリ</h1>
             </div>
-            <Link
-              href="/auth/signin"
-              className="bg-primary-500 text-white px-6 py-2 rounded-md hover:bg-primary-600 transition-colors"
-            >
-              ログイン
-            </Link>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/auth/signin"
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
+                ログイン
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors"
+              >
+                新規登録
+              </Link>
+            </div>
           </div>
         </div>
       </header>
 
       {/* メインコンテンツ */}
-      <main>
-        {/* ヒーローセクション */}
-        <section className="relative py-20 sm:py-24 lg:py-32">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-                リアルタイム
-                <span className="text-primary-500 block">チャットアプリ</span>
-              </h1>
-              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                WebSocketによるリアルタイムメッセージング、画像共有、ルーム管理など
-                現代的なチャット機能を備えたWebアプリケーション
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="/auth/signin"
-                  className="bg-primary-500 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-primary-600 transition-colors"
-                >
-                  今すぐ始める
-                </Link>
-                <a
-                  href="#features"
-                  className="bg-white text-primary-500 px-8 py-3 rounded-lg text-lg font-medium border-2 border-primary-500 hover:bg-primary-50 transition-colors"
-                >
-                  機能を見る
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 機能セクション */}
-        <section id="features" className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                主な機能
-              </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                現代的なチャットアプリケーションに必要な機能を全て搭載
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="bg-primary-500 text-white w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {feature.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 技術スタックセクション */}
-        <section className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                技術スタック
-              </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                モダンで実績のある技術を組み合わせて構築
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">フロントエンド</h3>
-                <ul className="space-y-2 text-gray-600">
-                  <li>• Next.js 14 + TypeScript</li>
-                  <li>• TailwindCSS</li>
-                  <li>• Socket.io クライアント</li>
-                  <li>• JWT認証</li>
-                </ul>
-              </div>
-
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">バックエンド</h3>
-                <ul className="space-y-2 text-gray-600">
-                  <li>• Spring Boot 3.x + Java 17</li>
-                  <li>• PostgreSQL + Valkey (Redis)</li>
-                  <li>• Socket.io + gRPC</li>
-                  <li>• JWT認証</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTAセクション */}
-        <section className="py-20 bg-primary-500">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              今すぐチャットを始めよう
-            </h2>
-            <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-              メールアドレスで簡単ログイン。すぐにリアルタイムチャットを体験できます。
-            </p>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            リアルタイム
+            <span className="text-primary-500 block">チャットアプリ</span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            友達や同僚とリアルタイムでチャットしよう。
+            画像共有、絵文字、プライベートルームなど充実の機能。
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/auth/signup"
+              className="bg-primary-500 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-primary-600 transition-colors"
+            >
+              今すぐ始める
+            </Link>
             <Link
               href="/auth/signin"
-              className="bg-white text-primary-500 px-8 py-3 rounded-lg text-lg font-medium hover:bg-gray-100 transition-colors inline-block"
+              className="bg-white text-primary-500 px-8 py-3 rounded-lg text-lg font-medium border-2 border-primary-500 hover:bg-primary-50 transition-colors"
             >
-              無料で始める
+              ログイン
             </Link>
           </div>
-        </section>
-      </main>
+        </div>
 
-      {/* フッター */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <div className="flex items-center mb-4">
-                <MessageCircle className="h-6 w-6 text-primary-500 mr-2" />
-                <span className="text-lg font-semibold">チャットアプリ</span>
-              </div>
-              <p className="text-gray-400">
-                現代的なリアルタイムチャットアプリケーション
-              </p>
+        {/* 機能紹介 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="h-8 w-8 text-primary-600" />
             </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">機能</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>リアルタイムメッセージング</li>
-                <li>画像・絵文字共有</li>
-                <li>ルーム管理</li>
-                <li>セキュア認証</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">サポート</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="/help" className="hover:text-white">ヘルプ</a></li>
-                <li><a href="/contact" className="hover:text-white">お問い合わせ</a></li>
-                <li><a href="/privacy" className="hover:text-white">プライバシー</a></li>
-                <li><a href="/terms" className="hover:text-white">利用規約</a></li>
-              </ul>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">リアルタイム</h3>
+            <p className="text-gray-600">瞬時にメッセージが届く</p>
           </div>
           
-          <div className="border-t border-gray-800 pt-8 mt-8 text-center text-gray-400">
-            <p>&copy; 2024 チャットアプリ. All rights reserved.</p>
+          <div className="text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="h-8 w-8 text-green-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">ルーム管理</h3>
+            <p className="text-gray-600">用途に応じたルーム作成</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">セキュア</h3>
+            <p className="text-gray-600">安全な認証とプライバシー</p>
           </div>
         </div>
-      </footer>
+      </main>
     </div>
   )
 }
