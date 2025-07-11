@@ -28,10 +28,13 @@ public class FileUploadController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private final Path uploadLocation = Paths.get("uploads");
+    private final Path uploadLocation;
 
     public FileUploadController() {
         try {
+            // Docker環境では/tmp/uploadsを使用（権限問題を回避）
+            String uploadDir = System.getProperty("java.io.tmpdir") + "/uploads";
+            uploadLocation = Paths.get(uploadDir);
             Files.createDirectories(uploadLocation);
         } catch (IOException e) {
             throw new RuntimeException("Could not create upload directory", e);

@@ -3,18 +3,39 @@ package com.chatapp.service;
 import com.chatapp.entity.User;
 import com.chatapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Collections;
 
 @Service
 @Transactional
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+        
+        return org.springframework.security.core.userdetails.User.builder()
+            .username(user.getId())
+            .password("") // パスワードは使用しない（JWT認証のため）
+            .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")))
+            .accountExpired(false)
+            .accountLocked(false)
+            .credentialsExpired(false)
+            .disabled(false)
+            .build();
+    }
 
     public User createUser(User user) {
         return userRepository.save(user);
