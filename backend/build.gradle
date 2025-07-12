@@ -1,0 +1,201 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'com.google.protobuf' version '0.9.4'
+    id 'checkstyle'
+    id 'pmd'
+    // id 'com.github.spotbugs' version '6.0.7'
+    id 'com.diffplug.spotless' version '6.25.0'
+}
+
+group = 'com.chatapp'
+version = '0.0.1-SNAPSHOT'
+description = 'Chat Application Backend'
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    grpcVersion = '1.60.0'
+    protobufVersion = '3.25.1'
+    checkstyleVersion = '10.12.4'
+    spotbugsVersion = '4.8.1'
+    jjwtVersion = '0.12.3'
+    grpcSpringBootStarterVersion = '2.15.0.RELEASE'
+    socketioVersion = '2.0.3'
+}
+
+dependencies {
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Database
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // gRPC
+    implementation "net.devh:grpc-spring-boot-starter:${grpcSpringBootStarterVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
+
+    // Socket.IO
+    implementation "com.corundumstudio.socketio:netty-socketio:${socketioVersion}"
+
+    // JWT
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+
+    // Utilities
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'com.h2database:h2'
+
+    // Annotation processors
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.2.0'
+        mavenBom 'org.testcontainers:testcontainers-bom:1.19.3'
+    }
+}
+
+// Protocol Buffers configuration
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+// Source sets for generated code
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/generated/source/proto/main/grpc'
+            srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
+}
+
+// Spring Boot configuration
+springBoot {
+    mainClass = 'com.chatapp.ChatBackendApplication'
+}
+
+// Test configuration
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+// Checkstyle configuration
+checkstyle {
+    toolVersion = checkstyleVersion
+    configFile = file("checkstyle.xml")
+    ignoreFailures = true
+    showViolations = true
+}
+
+checkstyleMain {
+    source = sourceSets.main.allJava
+}
+
+checkstyleTest {
+    source = sourceSets.test.allJava
+}
+
+// PMD configuration
+pmd {
+    toolVersion = '6.55.0'
+    ignoreFailures = true
+    ruleSetFiles = files()
+    ruleSets = [
+        'category/java/bestpractices.xml',
+        'category/java/codestyle.xml',
+        'category/java/design.xml',
+        'category/java/errorprone.xml',
+        'category/java/performance.xml',
+        'category/java/security.xml'
+    ]
+}
+
+// SpotBugs configuration - disabled for now
+// spotbugs {
+//     toolVersion = spotbugsVersion
+//     ignoreFailures = true
+// }
+
+// Spotless (Google Java Format) configuration
+spotless {
+    java {
+        googleJavaFormat('1.19.2')
+        target 'src/**/*.java'
+        targetExclude 'build/generated/**/*.java'
+    }
+}
+
+// Tasks
+tasks.named('compileJava') {
+    dependsOn 'generateProto'
+}
+
+tasks.named('spotlessApply') {
+    dependsOn 'compileJava'
+}
+
+// Custom tasks
+task formatCode {
+    dependsOn 'spotlessApply'
+    description = 'Formats the source code using Google Java Format'
+    group = 'formatting'
+}
+
+task codeQuality {
+    dependsOn 'checkstyleMain', 'checkstyleTest', 'pmdMain', 'pmdTest'
+    description = 'Runs all code quality checks'
+    group = 'verification'
+}
+
+// Integration with build
+build.dependsOn formatCode
+check.dependsOn codeQuality

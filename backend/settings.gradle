@@ -1,0 +1,20 @@
+// Plugin management
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+// Dependency resolution management
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'chat-backend'
+
+// Enable Gradle features
+enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')
