@@ -23,7 +23,8 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, RoomMemb
   @Query("SELECT COUNT(rm) FROM RoomMember rm WHERE rm.user.id = :userId")
   long countByUserId(@Param("userId") String userId);
 
-  @Query("SELECT CASE WHEN COUNT(rm) > 0 THEN true ELSE false END FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
+  @Query(
+      "SELECT CASE WHEN COUNT(rm) > 0 THEN true ELSE false END FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
   boolean existsByRoomIdAndUserId(@Param("roomId") String roomId, @Param("userId") String userId);
 
   @Query("DELETE FROM RoomMember rm WHERE rm.room.id = :roomId")

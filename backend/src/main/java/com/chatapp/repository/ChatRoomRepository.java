@@ -15,7 +15,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, String> {
   @Query("SELECT cr FROM ChatRoom cr WHERE cr.isPrivate = false")
   Page<ChatRoom> findPublicRooms(Pageable pageable);
 
-  @Query("SELECT cr FROM ChatRoom cr JOIN RoomMember rm ON cr.id = rm.id.roomId WHERE rm.id.userId = :userId")
+  @Query(
+      "SELECT cr FROM ChatRoom cr JOIN RoomMember rm ON cr.id = rm.id.roomId WHERE rm.id.userId = :userId")
   List<ChatRoom> findByUserId(@Param("userId") String userId);
 
   @Query("SELECT cr FROM ChatRoom cr WHERE cr.owner.id = :ownerId")
