@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  h2:
+    console:
+      enabled: false
+  redis:
+    host: localhost
+    port: 6379
+    database: 1
+
+# JWT configuration for testing
+jwt:
+  secret: test-secret-key-for-jwt-signing-must-be-at-least-256-bits-long-for-hmac-sha256
+  expiration: 86400
+  refresh-expiration: 604800
+
+# Disable socket.io server for tests
+socketio:
+  enabled: false
+
+# Disable actuator endpoints for tests except health
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    com.chatapp: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
