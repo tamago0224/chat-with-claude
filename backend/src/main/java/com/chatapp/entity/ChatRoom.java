@@ -1,5 +1,6 @@
 package com.chatapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -37,10 +38,12 @@ public class ChatRoom {
   private LocalDateTime updatedAt;
 
   // Room members
+  @JsonIgnore
   @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<RoomMember> members = new HashSet<>();
 
   // Messages
+  @JsonIgnore
   @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<Message> messages = new HashSet<>();
 

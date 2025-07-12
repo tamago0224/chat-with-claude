@@ -1,5 +1,6 @@
 package com.chatapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ public class User {
   @Column(name = "picture", length = 500)
   private String picture;
 
+  @JsonIgnore
   @Column(name = "password_hash", nullable = false)
   private String passwordHash;
 
@@ -36,14 +38,17 @@ public class User {
   private LocalDateTime updatedAt;
 
   // Room memberships
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<RoomMember> roomMemberships = new HashSet<>();
 
   // Owned rooms
+  @JsonIgnore
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<ChatRoom> ownedRooms = new HashSet<>();
 
   // Messages
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private Set<Message> messages = new HashSet<>();
 

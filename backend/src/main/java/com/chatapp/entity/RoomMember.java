@@ -1,5 +1,6 @@
 package com.chatapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,14 +11,14 @@ public class RoomMember {
 
   @EmbeddedId private RoomMemberId id;
 
+  @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
-  @MapsId("roomId")
-  @JoinColumn(name = "room_id")
+  @JoinColumn(name = "room_id", insertable = false, updatable = false)
   private ChatRoom room;
 
+  @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
-  @MapsId("userId")
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", insertable = false, updatable = false)
   private User user;
 
   @CreationTimestamp
@@ -48,10 +49,6 @@ public class RoomMember {
 
   public void setRoom(ChatRoom room) {
     this.room = room;
-    if (this.id == null) {
-      this.id = new RoomMemberId();
-    }
-    this.id.setRoomId(room.getId());
   }
 
   public User getUser() {
@@ -60,10 +57,6 @@ public class RoomMember {
 
   public void setUser(User user) {
     this.user = user;
-    if (this.id == null) {
-      this.id = new RoomMemberId();
-    }
-    this.id.setUserId(user.getId());
   }
 
   public LocalDateTime getJoinedAt() {

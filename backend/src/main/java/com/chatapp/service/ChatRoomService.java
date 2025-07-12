@@ -2,6 +2,7 @@ package com.chatapp.service;
 
 import com.chatapp.entity.ChatRoom;
 import com.chatapp.entity.RoomMember;
+import com.chatapp.entity.RoomMemberId;
 import com.chatapp.repository.ChatRoomRepository;
 import com.chatapp.repository.RoomMemberRepository;
 import java.util.List;
@@ -68,19 +69,22 @@ public class ChatRoomService {
 
   // Room membership methods
   public boolean isUserMemberOfRoom(String userId, String roomId) {
-    return roomMemberRepository.existsByRoomIdAndUserId(roomId, userId);
+    RoomMemberId id = new RoomMemberId(roomId, userId);
+    return roomMemberRepository.existsById(id);
   }
 
   public void addUserToRoom(String userId, String roomId) {
     if (!isUserMemberOfRoom(userId, roomId)) {
+      // Create RoomMember with composite key only
       RoomMember roomMember = new RoomMember();
-      roomMember.setId(new com.chatapp.entity.RoomMemberId(roomId, userId));
+      roomMember.setId(new RoomMemberId(roomId, userId));
       roomMemberRepository.save(roomMember);
     }
   }
 
   public void removeUserFromRoom(String userId, String roomId) {
-    roomMemberRepository.deleteByRoomIdAndUserId(roomId, userId);
+    RoomMemberId id = new RoomMemberId(roomId, userId);
+    roomMemberRepository.deleteById(id);
   }
 
   public List<RoomMember> getRoomMembers(String roomId) {
