@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { MessageCircle, Users, Plus, Search, Hash, Lock, UserPlus, LogOut, Settings, Menu } from 'lucide-react'
 import Layout from '@/components/layout/Layout'
 import { User, ChatRoom } from '@/types'
+import { useToast } from '@/components/common/ToastContainer'
 
 export default function Home() {
   const router = useRouter()
+  const { showError, showSuccess } = useToast()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | undefined>()
   const [rooms, setRooms] = useState<ChatRoom[]>([])
@@ -31,38 +33,31 @@ export default function Home() {
   }, [])
 
   const loadRooms = async () => {
-    // TODO: 実際のAPI呼び出しに置き換える
-    const mockRooms: ChatRoom[] = [
-      {
-        id: '1',
-        name: '一般チャット',
-        description: '誰でも参加できるパブリックチャット',
-        owner: { id: '1', name: 'Admin', email: 'admin@example.com', createdAt: '', updatedAt: '' },
-        isPrivate: false,
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-        memberCount: 25,
-        lastMessage: {
-          id: '1',
-          content: 'こんにちは！',
-          messageType: 'TEXT',
-          createdAt: '2024-01-01T12:00:00Z',
-          user: { id: '2', name: 'User', email: 'user@example.com', createdAt: '', updatedAt: '' },
-          room: {} as ChatRoom
-        }
-      },
-      {
-        id: '2',
-        name: '開発チーム',
-        description: 'プロジェクトの開発について話し合う',
-        owner: { id: '1', name: 'Admin', email: 'admin@example.com', createdAt: '', updatedAt: '' },
-        isPrivate: true,
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-        memberCount: 8
+    try {
+      const token = localStorage.getItem('authToken')
+      if (!token) {
+        showError('認証エラー', 'ログインが必要です')
+        return
       }
-    ]
-    setRooms(mockRooms)
+
+      const response = await fetch('http://localhost:8080/api/rooms/my', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to load rooms: ${response.status}`)
+      }
+
+      const roomsData = await response.json()
+      setRooms(roomsData)
+    } catch (error) {
+      console.error('Failed to load rooms:', error)
+      showError('ルーム読み込みエラー', 'ルーム一覧の取得に失敗しました')
+    }
   }
 
   const handleRoomSelect = (roomId: string) => {
