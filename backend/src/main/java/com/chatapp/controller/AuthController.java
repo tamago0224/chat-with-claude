@@ -114,17 +114,12 @@ public class AuthController {
 
       Map<String, Object> response = new HashMap<>();
       response.put("token", token);
-      response.put(
-          "user",
-          Map.of(
-              "id",
-              userId,
-              "email",
-              request.getEmail(),
-              "name",
-              request.getName(),
-              "picture",
-              (Object) null));
+      Map<String, Object> userInfo = new HashMap<>();
+      userInfo.put("id", userId);
+      userInfo.put("email", request.getEmail());
+      userInfo.put("name", request.getName());
+      userInfo.put("picture", null);
+      response.put("user", userInfo);
 
       return ResponseEntity.ok(response);
     } catch (Exception e) {
@@ -152,13 +147,12 @@ public class AuthController {
 
       Map<String, Object> response = new HashMap<>();
       response.put("token", token);
-      response.put(
-          "user",
-          Map.of(
-              "id", user.getId(),
-              "email", user.getEmail(),
-              "name", user.getName(),
-              "picture", user.getPicture() != null ? user.getPicture() : null));
+      Map<String, Object> userInfo = new HashMap<>();
+      userInfo.put("id", user.getId());
+      userInfo.put("email", user.getEmail());
+      userInfo.put("name", user.getName());
+      userInfo.put("picture", user.getPicture());
+      response.put("user", userInfo);
 
       return ResponseEntity.ok(response);
     } catch (Exception e) {
