@@ -15,7 +15,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, String> {
   @Query("SELECT cr FROM ChatRoom cr WHERE cr.isPrivate = false")
   Page<ChatRoom> findPublicRooms(Pageable pageable);
 
-  @Query("SELECT cr FROM ChatRoom cr JOIN cr.members rm WHERE rm.user.id = :userId")
+  @Query("SELECT cr FROM ChatRoom cr JOIN RoomMember rm ON cr.id = rm.id.roomId WHERE rm.id.userId = :userId")
   List<ChatRoom> findByUserId(@Param("userId") String userId);
 
   @Query("SELECT cr FROM ChatRoom cr WHERE cr.owner.id = :ownerId")
@@ -28,7 +28,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, String> {
       @Param("searchTerm") String searchTerm, Pageable pageable);
 
   @Query(
-      "SELECT cr FROM ChatRoom cr JOIN cr.members rm WHERE rm.user.id = :userId AND "
+      "SELECT cr FROM ChatRoom cr JOIN RoomMember rm ON cr.id = rm.id.roomId WHERE rm.id.userId = :userId AND "
           + "(cr.name ILIKE %:searchTerm% OR cr.description ILIKE %:searchTerm%)")
   List<ChatRoom> findUserRoomsByNameOrDescriptionContainingIgnoreCase(
       @Param("userId") String userId, @Param("searchTerm") String searchTerm);
