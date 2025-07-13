@@ -19,9 +19,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import com.chatapp.config.TestSecurityConfig;
 
 @WebMvcTest(AuthController.class)
+@ContextConfiguration(classes = {AuthController.class, TestSecurityConfig.class})
 class AuthControllerTest {
 
   @Autowired private MockMvc mockMvc;

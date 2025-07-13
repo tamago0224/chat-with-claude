@@ -25,8 +25,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ContextConfiguration;
+import com.chatapp.config.TestSecurityConfig;
 
 @WebMvcTest(ChatRoomController.class)
+@ContextConfiguration(classes = {ChatRoomController.class, TestSecurityConfig.class})
 class ChatRoomControllerTest {
 
   @Autowired private MockMvc mockMvc;

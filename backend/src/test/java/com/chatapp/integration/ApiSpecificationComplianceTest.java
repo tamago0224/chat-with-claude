@@ -23,12 +23,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Integration tests to verify that the backend APIs comply with the specification requirements
  * defined in docs/chat_app_specification.md
  */
-@SpringBootTest(classes = ChatBackendApplication.class)
+@SpringBootTest(classes = {ChatBackendApplication.class, ApiSpecificationComplianceTest.TestConfig.class})
 @AutoConfigureWebMvc
 @ActiveProfiles("test")
 @Transactional
@@ -339,5 +345,19 @@ class ApiSpecificationComplianceTest {
                 .content(objectMapper.writeValueAsString(invalidTokenRequest)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.valid").value(false));
+  }
+
+  @TestConfiguration
+  static class TestConfig {
+    @Bean
+    @Primary
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+      http.csrf(AbstractHttpConfigurer::disable)
+          .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
+          .oauth2Login(AbstractHttpConfigurer::disable)
+          .formLogin(AbstractHttpConfigurer::disable)
+          .httpBasic(AbstractHttpConfigurer::disable);
+      return http.build();
+    }
   }
 }

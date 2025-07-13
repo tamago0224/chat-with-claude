@@ -18,8 +18,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ContextConfiguration;
+import com.chatapp.config.TestSecurityConfig;
 
 @WebMvcTest(UserController.class)
+@ContextConfiguration(classes = {UserController.class, TestSecurityConfig.class})
 class UserControllerTest {
 
   @Autowired private MockMvc mockMvc;
