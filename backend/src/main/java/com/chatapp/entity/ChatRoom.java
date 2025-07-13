@@ -24,6 +24,7 @@ public class ChatRoom {
   @Column(name = "description", columnDefinition = "TEXT")
   private String description;
 
+  @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "owner_id", nullable = false)
   private User owner;

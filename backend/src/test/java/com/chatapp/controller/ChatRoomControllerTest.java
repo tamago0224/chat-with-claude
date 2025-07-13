@@ -23,6 +23,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import com.chatapp.dto.TestPageResponse;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.ContextConfiguration;
@@ -80,7 +81,7 @@ class ChatRoomControllerTest {
   @Test
   void getPublicRooms_ShouldReturnPageOfRooms() throws Exception {
     // Given
-    Page<ChatRoom> rooms = new PageImpl<>(Arrays.asList(testRoom));
+    Page<ChatRoom> rooms = new TestPageResponse<>(Arrays.asList(testRoom));
     when(chatRoomService.findPublicRooms(any(Pageable.class))).thenReturn(rooms);
 
     // When & Then
@@ -392,7 +393,7 @@ class ChatRoomControllerTest {
   @Test
   void searchPublicRooms_ShouldReturnMatchingRooms() throws Exception {
     // Given
-    Page<ChatRoom> rooms = new PageImpl<>(Arrays.asList(testRoom));
+    Page<ChatRoom> rooms = new TestPageResponse<>(Arrays.asList(testRoom));
     when(chatRoomService.searchPublicRooms(eq("Test"), any(Pageable.class))).thenReturn(rooms);
 
     // When & Then

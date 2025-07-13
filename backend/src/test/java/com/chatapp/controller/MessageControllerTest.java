@@ -24,6 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import com.chatapp.dto.TestPageResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.ContextConfiguration;
 import com.chatapp.config.TestSecurityConfig;
@@ -76,7 +77,7 @@ class MessageControllerTest {
     // Given
     mockValidToken();
     when(chatRoomService.isUserMemberOfRoom("test-user-id", "test-room-id")).thenReturn(true);
-    Page<Message> messages = new PageImpl<>(Arrays.asList(testMessage));
+    Page<Message> messages = new TestPageResponse<>(Arrays.asList(testMessage));
     when(messageService.findByRoomId(eq("test-room-id"), any(Pageable.class))).thenReturn(messages);
 
     // When & Then
@@ -149,7 +150,7 @@ class MessageControllerTest {
     // Given
     mockValidToken();
     when(chatRoomService.isUserMemberOfRoom("test-user-id", "test-room-id")).thenReturn(true);
-    Page<Message> messages = new PageImpl<>(Arrays.asList(testMessage));
+    Page<Message> messages = new TestPageResponse<>(Arrays.asList(testMessage));
     when(messageService.searchMessages(eq("test-room-id"), eq("test"), any(Pageable.class)))
         .thenReturn(messages);
 
@@ -171,7 +172,7 @@ class MessageControllerTest {
     // Given
     mockValidToken();
     when(chatRoomService.isUserMemberOfRoom("test-user-id", "test-room-id")).thenReturn(true);
-    Page<Message> messages = new PageImpl<>(Arrays.asList(testMessage));
+    Page<Message> messages = new TestPageResponse<>(Arrays.asList(testMessage));
     when(messageService.findMessagesByDateRange(
             eq("test-room-id"),
             any(LocalDateTime.class),
@@ -202,7 +203,7 @@ class MessageControllerTest {
   void getMessagesByUser_SameUser_ShouldReturnMessages() throws Exception {
     // Given
     mockValidToken();
-    Page<Message> messages = new PageImpl<>(Arrays.asList(testMessage));
+    Page<Message> messages = new TestPageResponse<>(Arrays.asList(testMessage));
     when(messageService.findByUserId(eq("test-user-id"), any(Pageable.class))).thenReturn(messages);
 
     // When & Then
